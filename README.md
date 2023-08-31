@@ -1,13 +1,11 @@
 # Esquema de comunicación
 
-Fuente: Imagen jpg importado en python
+Fuente: Imagen jpg importado desde la web
 
-Transmisor: Modulo importado que codifica la imagen 
+Transmisor: Se codifica la imagen a base64
 
-Canal: pipeline python
+Canal: Ocurre interferencia y se aplica ruido
 
-Receptor: Modulo que decodifique el mensaje transmitido por el canal
+Receptor: Se decodifica la imagen
 
-Destinatario: Visualización grafica (plot)
-
-
+Destinatario: La imagen se entrega y se visualiza
