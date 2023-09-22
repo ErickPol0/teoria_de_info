@@ -1,63 +1,52 @@
-import numpy as np
-import base64
 from PIL import Image
-import io
-from io import BytesIO
 import matplotlib.pyplot as plt
-import matplotlib.image as mpimg
-from random import randint
-from random import randrange
+import random
+import numpy as np
 import urllib.request
 
-def fuente(ruta):  
-    urllib.request.urlretrieve(ruta,'gfg.jpg')
-    return Image.open("gfg.jpg")
+def fuente(url):
+    urllib.request.urlretrieve(url, 'imagen.jpg')
+    return Image.open('imagen.jpg')
 
-def transmisor(img):
-    im_file = BytesIO()
-    img.save(im_file, format="JPEG")
-    im_bytes = im_file.getvalue() 
-    return base64.b64encode(im_bytes)
+def transmisor(imagen):
+    return imagen.convert("L")
 
-def canal(cod):
-    im_bytes = base64.b64decode(cod)  
-    im_file = BytesIO(im_bytes)  
-    img = Image.open(im_file)  
+def canal_receptor(imagen_gris, probabilidad_error):
+    img_width, img_height = imagen_gris.size
+    received_symbols = []
 
-    width, height = img.size
-    img2 = Image.new("RGB", (width, height))
+    for pixel_value in np.array(imagen_gris).flatten():
+        if random.random() < probabilidad_error:
+            # Introducir un error (cambiar el valor del píxel)
+            received_symbols.append(random.randint(0, 255))
+        else:
+            received_symbols.append(pixel_value)
 
-    pixel_values = list(img.getdata())
-    for x in range(width) :
-        for y in range(height) :
-            ra = randrange(5)
-            rb = randrange(5)
-            if ra == rb:
-                r = randint(0,25)
-                g = randint(0,255)
-                b = randint(0,255)
-                img2.putpixel((x,y), (r, g, b))
-            else:
-                r = pixel_values[width*y+x][0]
-                g = pixel_values[width*y+x][1]
-                b = pixel_values[width*y+x][2]
-                img2.putpixel((x,y), (r, g, b))
+    return np.array(received_symbols, dtype=np.uint8).reshape((img_height, img_width))
 
-    im_file = BytesIO()
-    img2.save(im_file, format="JPEG")
-    im_bytes = im_file.getvalue()  
-    return base64.b64encode(im_bytes)
+def destino(original, con_ruido):
+    plt.figure(figsize=(12, 6))
+    plt.subplot(1, 2, 1)
+    plt.imshow(np.array(original), cmap='gray')
+    plt.title('Imagen Original')
 
-def receptor(cod):
-    im_bytes = base64.b64decode(cod)   
-    im_file = BytesIO(im_bytes)  
-    return Image.open(im_file) 
+    plt.subplot(1, 2, 2)
+    plt.imshow(np.array(con_ruido), cmap='gray')
+    plt.title('Imagen con Ruido')
 
-def destino(img_dec):
-    img_dec.show()
+    plt.tight_layout()
+    plt.show()
 
-img = fuente(r'https://www.lavozdelafrontera.com.mx/cultura/d8l25j-luisito-comunica-sonic.jpg/alternates/LANDSCAPE_768/Luisito%20comunica%20sonic.jpg')
-img_cod = transmisor(img)
-img_cod = canal(img_cod)
-img_dec = receptor(img_cod)
-destino(img_dec)
+# Cargar la imagen original
+url_imagen = r'https://www.lavozdelafrontera.com.mx/cultura/d8l25j-luisito-comunica-sonic.jpg/alternates/LANDSCAPE_768/Luisito%20comunica%20sonic.jpg'
+imagen_original = fuente(url_imagen)
+
+# Convertir la imagen a escala de grises
+imagen_gris = transmisor(imagen_original)
+
+# Simular el canal con ruido
+probabilidad_error = 0.1  # Probabilidad de error del canal
+imagen_con_ruido = canal_receptor(imagen_gris, probabilidad_error)
+
+# Mostrar las imágenes
+destino(imagen_gris, imagen_con_ruido)
