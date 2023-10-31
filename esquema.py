@@ -1,13 +1,25 @@
+import random
+
 def fuente():
     texto = 'saoko papi saoko'
     return texto
 
-def transmisor(texto, tabla_codigos):
+def transmisor(texto, tabla_codigos, longitud_paquete):
     texto_codificado = "".join(tabla_codigos[caracter] for caracter in texto)
-    return texto_codificado
+    paquetes = [texto_codificado[i:i+longitud_paquete] for i in range(0, len(texto_codificado), longitud_paquete)]
+    return paquetes
 
-def canal(texto_codificado):
-    return texto_codificado
+def canal(paquetes, probabilidad_error):
+    paquetes_perdidos = []
+    paquetes_recibidos = []
+    
+    for paquete in paquetes:
+        if random.random() < probabilidad_error:
+            paquetes_perdidos.append(paquete)
+        else:
+            paquetes_recibidos.append(paquete)
+    
+    return paquetes_recibidos, paquetes_perdidos
 
 def receptor(texto_codificado, tabla_codigos):
     texto_decodificado = ""
@@ -22,6 +34,7 @@ def receptor(texto_codificado, tabla_codigos):
             codigo_actual = ""
 
     return texto_decodificado
+
 
 def destino(texto):
     print(texto)
