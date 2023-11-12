@@ -21,6 +21,7 @@ paquetes_recibidos, paquetes_perdidos = canal(paquetes, probabilidad_error)
 #texto_codificado= canal(texto_codificado)
 #texto_decodificado = receptor(texto_codificado,tabla_codigos)
 #destino(texto_decodificado)
+#holaaa
 
 
     
