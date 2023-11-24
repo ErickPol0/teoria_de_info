@@ -8,14 +8,15 @@ if metodo == 1:
 else:
     codificador = ShannonFano()
 
-longitud_paquete = 4
+longitud_paquete = 12
 probabilidad_error = 0.4
 texto_original = fuente()
 tabla_codigos = codificador.tabla(texto_original)
-paquetes = transmisor(texto_original, tabla_codigos, longitud_paquete)
-paquetes_recuperados = adaptacion_modulativa(paquetes, probabilidad_error)
-texto_decodificado = receptor(paquetes_recuperados,tabla_codigos)
+paquetes,tabla_hash = transmisor(texto_original, tabla_codigos, longitud_paquete)
+paquetes_recuperados = modulacion_adaptativa(paquetes, probabilidad_error)
+texto_decodificado = receptor(tabla_hash,paquetes_recuperados)
 destino(texto_decodificado)
+
 
     
 
