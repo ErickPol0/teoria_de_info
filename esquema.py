@@ -6,13 +6,15 @@ def fuente():
     return texto
 
 def transmisor(mensaje, tabla_codigos, longitud_paquete):
-    mensaje_codificado = "".join(tabla_codigos[caracter] for caracter in mensaje)
-    hash_mensaje = calcular_hash(mensaje_codificado)
-    mhash = mensaje_codificado+hash_mensaje
-    paquetes = [mhash[i:i+longitud_paquete] for i in range(0, len(mhash), longitud_paquete)]
-    return paquetes
+    print('tabla original ',tabla_codigos)
+    hashtabla = hash_table(tabla_codigos)
+    hash_mensaje = hash_message(mensaje,hashtabla)
+    print('mensaje hash:',hash_mensaje)
+    print('tabla hash:',hashtabla)
+    paquetes = [hash_mensaje[i:i+longitud_paquete] for i in range(0, len(hash_mensaje), longitud_paquete)]
+    return paquetes,hashtabla
 
-def adaptacion_modulativa(datos, probabilidad_error):
+def modulacion_adaptativa(datos, probabilidad_error):
     paquetes = datos
     paks_completos = [0]*len(paquetes)
     error = True
@@ -34,13 +36,6 @@ def adaptacion_modulativa(datos, probabilidad_error):
             if intento==20:
                 break
 
-def calcular_hash(mensaje_codificado):
-    mensaje_codificado = mensaje_codificado.encode('utf-8')
-    hash_obj = hashlib.sha256()
-    hash_obj.update(mensaje_codificado)
-    hash_resultado = hash_obj.hexdigest()
-    return hash_resultado
-
 def canal(paquetes,insert_index, probabilidad_error):
     paks_perdidos = []
     paks_recuperados = []
@@ -56,26 +51,49 @@ def canal(paquetes,insert_index, probabilidad_error):
             indx_buenos.append(insert_index[i])
     return paks_recuperados, indx_buenos, paks_perdidos, indx_malos
 
+def hash_table(symbol_table):
+    hashed_table = {}
+    for symbol, bits in symbol_table.items():
+        hashed_value = hashlib.sha256(bits.encode()).hexdigest()
+        hashed_table[symbol] = hashed_value
+    return hashed_table
 
-def receptor(paquetes_recuperados, tabla_codigos):
-    mhash = ''.join(paquetes_recuperados)
-    bits = mhash[:-64]
-    hashr = mhash[-64:]
-    bitshash = calcular_hash(bits)
-    if bitshash == hashr:
-        texto_decodificado = ""
-        codigo_actual = ""
-        tabla_inversa = {codigo: simbolo for simbolo, codigo in tabla_codigos.items()}
-        for bit in bits:
-            codigo_actual += bit
-            if codigo_actual in tabla_codigos.values():
-                simbolo = tabla_inversa[codigo_actual]
-                texto_decodificado += simbolo
-                codigo_actual = ""
-        return texto_decodificado  
-    else:
-        print("Error: La integridad del mensaje no es válida. Posible manipulación o pérdida de datos.")  
-    
+def hash_message(message, hashed_table):
+    hashed_message = ''
+    for s in message:
+        hashed_value = hashed_table.get(s, "DESCONOCIDO")
+        hashed_message += hashed_value
+    return hashed_message
+
+def receptor(hashed_table, hashed_paquetes):
+    hashed_table = list(hashed_table.items())
+    hashed_table = sorted(hashed_table, key=lambda x: x[1])  # Ordenar por hash
+    hashed_message = ''.join(hashed_paquetes)
+    decoded_message = ""
+    # Dividir el mensaje hasheado en secuencias de bits
+    secuencias_hash = [hashed_message[i:i+64] for i in range(0, len(hashed_message), 64)]
+    for secuencia in secuencias_hash:
+        # Utilizar la búsqueda binaria para obtener el símbolo correspondiente
+        symbol = binary_search(hashed_table, secuencia)
+        if symbol is not None:
+            decoded_message += symbol
+        else:
+            decoded_message += "DESCONOCIDO"  # Marcar si el símbolo no fue encontrado
+    return decoded_message
+
+def binary_search(hashed_table, secuencia):
+    left, right = 0, len(hashed_table) - 1
+    while left <= right:
+        mid = (left + right) // 2
+        mid_key, mid_value = hashed_table[mid]
+        if mid_value == secuencia:
+            return mid_key  # Se encontró la secuencia de bits, devuelve el símbolo
+        elif mid_value < secuencia:
+            left = mid + 1
+        else:
+            right = mid - 1
+    return None
+
 def destino(texto):
     print(texto)
 
